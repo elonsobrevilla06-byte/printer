@@ -80,7 +80,7 @@ def split_bill_print(transaction_id):
 
         for guest in all_guests:
 
-            print(f"🖨️ Printing bill for {guest.get('firstName')}")
+            print(f" Printing bill for {guest.get('firstName')}")
 
             # ---------------------------------
             # Convert services format
@@ -173,6 +173,129 @@ def split_bill_print(transaction_id):
         print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
     
+
+@app.route("/split-bill/print/<string:transaction_id>/specific", methods=["GET"])
+def split_bill_print_specific(transaction_id):
+
+    try:
+        data = get_floatingbar_transaction(transaction_id)
+
+        if not data:
+            return jsonify({"error": "Transaction not found"}), 404
+
+        # 🎯 Target guest from query params
+        target_first = request.args.get("firstName")
+        target_last = request.args.get("lastName")
+
+        if not target_first or not target_last:
+            return jsonify({"error": "Provide firstName and lastName"}), 400
+
+        main_guest = data.get("main_guest_information", {})
+        add_on_guests = data.get("add_on_guest", [])
+
+        all_guests = [main_guest] + add_on_guests
+
+        printed = 0
+
+        for guest in all_guests:
+
+            #  Match only the requested guest
+            if not (
+                guest.get("firstName", "").lower() == target_first.lower()
+                and guest.get("lastName", "").lower() == target_last.lower()
+            ):
+                continue
+
+            print(f"\n🧾 Printing bill for {guest.get('firstName')} {guest.get('lastName')}")
+
+            # ---------------------------------
+            # Convert services format
+            # ---------------------------------
+            converted_services = []
+            subtotal = 0
+
+            for s in guest.get("services_availed", []):
+                qty = s.get("qty", 1)
+                price = s.get("unit_price", 0)
+
+                converted_services.append({
+                    "qty": qty,
+                    "item": s.get("item", "Item"),
+                    "price": price,
+                    "note": s.get("notes", "")
+                })
+
+                subtotal += qty * price
+
+                print(f"  {qty} x {s.get('item')} @ {price} = {qty * price}")
+
+            # ---------------------------------
+            # APPLY DISCOUNT %
+            # ---------------------------------
+            discount_percent = guest.get("discount_amount", 0) or 0
+            discount_id = guest.get("discountId")
+
+            discount_value = 0
+            if discount_id and discount_percent > 0:
+                discount_value = subtotal * (discount_percent / 100)
+
+            net_total = max(subtotal - discount_value, 0)
+
+            # ---------------------------------
+            # PAYMENT + CHANGE
+            # ---------------------------------
+            amount_paid = guest.get("amount_paid", 0)
+            change = max(amount_paid - net_total, 0)
+
+            print(f"  NET TOTAL: {net_total}")
+            print(f"  AMOUNT PAID: {amount_paid}")
+            print(f"  CHANGE: {change}")
+
+            # ---------------------------------
+            # 🧾 PREPARE DATA FOR PRINTER
+            # ---------------------------------
+            receipt_data = data.copy()
+
+            receipt_data["services_availed"] = json.dumps(converted_services)
+            receipt_data["total_net_billing"] = net_total
+            receipt_data["total_amount_paid"] = amount_paid
+            receipt_data["total_change"] = change
+
+            # ---------------------------------
+            #  BUILD RECEIPT (READY)
+            # ---------------------------------
+            # receipt = build_billout_receipt(
+            #     receipt_data,
+            #     json.dumps(guest)
+            # )
+
+            # ---------------------------------
+            #  SEND TO PRINTER (READY)
+            # ---------------------------------
+            # send_to_printer_registration(
+            #     receipt,
+            #     logo_path="./images/BlueOceanBar.jpg",
+            #     qr_path="./images/blueoceanbar_qr.png"
+            # )
+
+            printed += 1
+            break  # Only print one guest
+
+        if printed == 0:
+            return jsonify({"error": "Guest not found in this transaction"}), 404
+
+        print(f"\n {printed} receipt prepared (console preview)")
+
+        return jsonify({
+            "success": True,
+            "printed": printed
+        })
+
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"error": str(e)}), 500
+    
+
 @app.route("/floatingbar/guest-payment", methods=["PUT"])
 def update_guest_payment():
     """
