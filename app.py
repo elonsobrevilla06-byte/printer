@@ -128,6 +128,7 @@ def split_bill_print(transaction_id):
             # Prepare data for printer
             # ---------------------------------
             receipt_data = data.copy()
+            print(receipt_data)
 
             receipt_data["services_availed"] = json.dumps(converted_services)
             receipt_data["total_net_billing"] = net_total
@@ -246,7 +247,7 @@ def split_bill_print_specific(transaction_id):
             # ---------------------------------
             amount_paid = guest.get("amount_paid", 0)
             change = max(amount_paid - net_total, 0)
-
+            print(f"All Data: {data}")
             print(f"  NET TOTAL: {net_total}")
             print(f"  AMOUNT PAID: {amount_paid}")
             print(f"  CHANGE: {change}")
