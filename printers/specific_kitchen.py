@@ -11,8 +11,8 @@ CUT_SAFE = b'\n\n\n\x1d\x56\x00'
 # Printer mapping
 PRINTERS = {
     "kitchen_printer_1": "192.168.1.221",
-    "kitchen_printer_2": "192.168.1.222",
-    "bar_printer_1": "192.168.1.223"
+    "kitchen_printer_2": "192.168.1.220"
+    # "bar_printer_1": "192.168.1.223"
 }
 
 def money(val):

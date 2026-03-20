@@ -317,6 +317,6 @@ if __name__ == "__main__":
 
     send_to_printer_registration(
         receipt,
-        logo_path="./BlueOceanBar.jpg",
-         qr_path="./blueoceanbar_qr.png"
+        logo_path="./images/BlueOceanBar.jpg",
+         qr_path="./images/blueoceanbar_qr.png"
     )

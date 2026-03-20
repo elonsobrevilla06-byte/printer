@@ -1,0 +1,73 @@
+[{
+    "country": "Philippines",
+    "email": "elonsobrevilla@",
+    "firstName": "customer2",
+    "lastName": "Sobrevilla",
+    "notes": "",
+    "pax" : "6",
+    "phone": "+63",
+    "transactiondate": "2026-03-12",
+    "discountId" : "discountId",
+    "discount_amount": 0,
+    "amount_paid": 0,
+    "transaction_id": "TXN-001",
+    "services_availed": [
+        {
+            "item": "wahoo",
+            "qty": 8,
+            "unit_price": 1000,
+            "waiter": "Sample Waiter",
+            "notes": "no fish",
+            "purchased_at": "T1 - Front Facade - Main Deck"
+        },
+
+        {
+            "item": "Salmon",
+            "qty": 3,
+            "unit_price": 2000,
+            "waiter": "Sample Waiter",
+            "notes": "no fish",
+            "purchased_at": "T1 - Front Facade - Main Deck"
+        }
+    ]
+
+
+},
+{
+    "country": "Philippines",
+    "email": "elonsobrevilla@",
+    "firstName": "Customer3",
+    "lastName": "Sobrevilla",
+    "notes": "",
+    "pax" : "6",
+    "phone": "+63",
+    "transactiondate": "2026-03-12",
+    "discountId" : "discountId",
+    "discount_amount": 0,
+    "amount_paid": 0,
+    "transaction_id": "TXN-001",
+    "services_availed": [
+        {
+            "item": "Tuna",
+            "qty": 8,
+            "unit_price": 1000,
+            "waiter": "Sample Waiter",
+            "notes": "no fish",
+            "purchased_at": "T1 - Front Facade - Main Deck"
+        },
+
+        {
+            "item": "Salmon",
+            "qty": 3,
+            "unit_price": 2000,
+            "waiter": "Sample Waiter",
+            "notes": "no fish",
+            "purchased_at": "T1 - Front Facade - Main Deck"
+        }
+    ]
+
+
+}
+
+
+]

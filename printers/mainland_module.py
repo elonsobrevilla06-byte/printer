@@ -2,7 +2,7 @@ from PIL import Image
 import socket
 import json
 
-printer_ip = "192.168.1.221"
+printer_ip = "192.168.1.116"
 #192.168.1.220
 port = 9100
 
