@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, Flask
 from printers.floatingbar_module import build_billout_receipt, send_to_printer_registration
 from printers.specific_kitchen import build_kitchen_receipt, send_to_printer
 import json
+from database_modules.db_connector import get_connection_floatingbar
 from database_modules.floatingbar_transaction_module import get_floatingbar_transaction
 
 app = Flask(__name__)
@@ -172,6 +173,82 @@ def split_bill_print(transaction_id):
         print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
     
+@app.route("/floatingbar/guest-payment", methods=["PUT"])
+def update_guest_payment():
+    """
+    Updates the amount paid for a specific guest in a floatingbar transaction.
+    Expects JSON body:
+    {
+        "transaction_id": "TXN-001",
+        "guest_first_name": "customer2",
+        "guest_last_name": "Sobrevilla",
+        "amount_paid": 2000
+    }
+    """
+    try:
+        data = request.get_json()
+        transaction_id = data.get("transaction_id")
+        first_name = data.get("guest_first_name")
+        last_name = data.get("guest_last_name")
+        guest_payment = float(data.get("amount_paid") or 0)
+
+        if not transaction_id or not first_name or not last_name:
+            return jsonify({"status": "error", "message": "Missing required fields"}), 400
+
+        conn = get_connection_floatingbar()
+        cursor = conn.cursor(dictionary=True)
+
+        # Fetch existing transaction
+        cursor.execute("SELECT * FROM floatingbar_transaction WHERE transaction_id = %s", (transaction_id,))
+        transaction = cursor.fetchone()
+
+        if not transaction:
+            return jsonify({"status": "error", "message": "Transaction not found"}), 404
+
+        # Load JSON fields
+        main_guest = json.loads(transaction.get("main_guest_information") or "{}")
+        add_on_guests = json.loads(transaction.get("add_on_guest") or "[]")
+
+        guest_found = False
+
+        # Check main guest first
+        if main_guest.get("firstName") == first_name and main_guest.get("lastName") == last_name:
+            main_guest["amount_paid"] = guest_payment
+            guest_found = True
+
+        # Check add-on guests
+        for guest in add_on_guests:
+            if guest.get("firstName") == first_name and guest.get("lastName") == last_name:
+                guest["amount_paid"] = guest_payment
+                guest_found = True
+                break
+
+        if not guest_found:
+            return jsonify({"status": "error", "message": "Guest not found in transaction"}), 404
+
+        # Update the DB
+        cursor.execute("""
+            UPDATE floatingbar_transaction
+            SET main_guest_information = %s, add_on_guest = %s
+            WHERE transaction_id = %s
+        """, (json.dumps(main_guest), json.dumps(add_on_guests), transaction_id))
+
+        conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": f"Payment updated for {first_name} {last_name}",
+            "guest_payment": guest_payment
+        })
+
+    except Exception as e:
+        if conn: conn.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)
